@@ -1,6 +1,8 @@
-# Clawd Lab · 体型差
+# Clawd Lab · 实验室奇妙夜
 
-![Clawd Lab](docs/cover.jpg)
+> Night at the Lab. Is it finally time for Fable 5.5?
+
+![实验室奇妙夜](docs/cover_zh.jpg)
 
 **成片下载：** [Releases](https://github.com/fish2lab/clawd-lab/releases/latest)（4K60 母版、1080p60、封面图）
 
@@ -49,7 +51,7 @@ pip install -r requirements.txt
 python make_video.py --res 4k --fps 60            # 4K/60 母版 → out/clawd_lab_4k.mp4
 python make_video.py --res 1080 --fps 30          # 快速预览
 python make_video.py --res 1080 --stills 7.3,29.9 # 导出单帧 PNG
-python make_covers.py                             # 16:9 / 4:3 封面（中文版与无字版）
+python make_covers.py                             # 16:9 / 4:3 封面（中文版、英文版、无字版）
 ```
 
 渲染按 CPU 核数切成若干段并行，每段各自编码，最后无损拼接，再混入 `clawdlab/audio.py` 生成的音轨。在 4 核机器上，4K60 全片大约需要 25 分钟。
@@ -58,7 +60,7 @@ python make_covers.py                             # 16:9 / 4:3 封面（中文�
 
 ```
 make_video.py          命令行入口：并行渲染、分段编码、拼接、混音
-make_covers.py         封面：在同一个世界里摆拍，再叠加中文标题
+make_covers.py         封面：在同一个世界里摆拍夜景，再叠加中英文海报标题
 clawdlab/
   story.py             分镜：所有关键时间、角色走位、相机、特效，以及音效提示表
   clawd.py             Clawd 角色：可转身的盒子投影，三套服装，道具（清单/电脑）

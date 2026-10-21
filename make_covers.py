@@ -25,7 +25,8 @@ def key_state(cam, cracks=0.0):
     st = story.build(T_KEY)
     st.cam = cam
     st.shake, st.cam_rot = (0.0, 0.0), 0.0
-    st.alarm, st.flash, st.night = 0.18, 0.0, 0.28
+    st.alarm, st.flash, st.night = 0.0, 0.0, 0.62
+    st.lamps.update(fable_l=0.25, fable_r=0.25)
     rs = st.reactor
     rs.update(eyes=1.0, eye_open=1.0, angry=0.45, lunge=0.06, cracks=cracks, flash=0.0, vapour=0.45)
     h = next(c for c in st.chars if c.name == "haiku")
@@ -54,57 +55,63 @@ def draw_text(cv, s, x, y, px, fill, stroke=None, sw=0.0, align="left"):
     return w
 
 
-def warning_panel(cv, x, y, w, k, rot=-3.0):
-    """Lab-sign style panel: '实验室守则 第一条 / 请勿敲击玻璃'."""
-    h = 430 * k
-    cv.save()
-    cv.translate(x + w / 2, y + h / 2)
-    cv.rotate(rot)
-    cv.translate(-w / 2, -h / 2)
-    # drop shadow
-    sh = skia.Paint(AntiAlias=True, Color=col(P.INK, 0.45))
-    sh.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, 22 * k))
-    cv.drawRoundRect(skia.Rect(14 * k, 22 * k, w + 14 * k, h + 22 * k), 26 * k, 26 * k, sh)
-    cv.drawRoundRect(skia.Rect(0, 0, w, h), 26 * k, 26 * k, skia.Paint(AntiAlias=True, Color=col(P.HAZARD_DARK)))
-    cv.drawRoundRect(skia.Rect(14 * k, 14 * k, w - 14 * k, h - 14 * k), 16 * k, 16 * k,
-                     skia.Paint(AntiAlias=True, Color=col(P.SAFETY)))
-    inner = skia.Paint(AntiAlias=True, Color=col(P.HAZARD_DARK), Style=skia.Paint.kStroke_Style, StrokeWidth=5 * k)
-    cv.drawRoundRect(skia.Rect(34 * k, 34 * k, w - 34 * k, h - 34 * k), 10 * k, 10 * k, inner)
-    # warning triangle
-    tx, ty, ts = 80 * k, 70 * k, 92 * k
-    tri = skia.Path()
-    tri.moveTo(tx + ts / 2, ty)
-    tri.lineTo(tx + ts, ty + ts * 0.88)
-    tri.lineTo(tx, ty + ts * 0.88)
-    tri.close()
-    cv.drawPath(tri, skia.Paint(AntiAlias=True, Color=col(P.HAZARD_DARK), Style=skia.Paint.kStroke_Style,
-                                StrokeWidth=11 * k, StrokeJoin=skia.Paint.kRound_Join))
-    f = skia.Font(typeface("slab"), 62 * k)
-    cv.drawString("!", tx + ts / 2 - 9 * k, ty + ts * 0.8, f, skia.Paint(AntiAlias=True, Color=col(P.HAZARD_DARK)))
-    draw_text(cv, "实验室守则 第一条", tx + ts + 30 * k, ty + 76 * k, 78 * k, P.HAZARD_DARK)
-    draw_text(cv, "请勿敲击玻璃", w / 2, h - 82 * k, 196 * k, P.HAZARD_DARK, align="center")
-    cv.restore()
-    return h
+def spaced(cv, s, x, y, px, fill, font="slab", track=0.18):
+    """Letter-spaced Latin caps (poster credit-line style)."""
+    f = skia.Font(typeface(font), px)
+    paint = skia.Paint(AntiAlias=True, Color=col(fill))
+    for ch in s:
+        cv.drawString(ch, x, y, f, paint)
+        x += f.measureText(ch) + px * track
+    return x
 
 
-def caption(cv, lines, x, y, k, rot=2.0):
-    cv.save()
-    cv.translate(x, y)
-    cv.rotate(rot)
-    yy = 0.0
-    for s, px, fill in lines:
-        draw_text(cv, s, 0, yy, px * k, fill, P.INK, 22 * k)
-        yy += px * k * 1.12
-    cv.restore()
+def poster_text(cv, s, x, y, px, font="zh", k=1.0):
+    """Gold title lettering with an ink outline and a warm glow."""
+    f = skia.Font(typeface(font), px)
+    f.setEdging(skia.Font.Edging.kAntiAlias)
+    glow = skia.Paint(AntiAlias=True, Color=col(P.GLOW, 0.55))
+    glow.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, px * 0.12))
+    cv.drawString(s, x, y, f, glow)
+    ink = skia.Paint(AntiAlias=True, Color=col(P.INK), Style=skia.Paint.kStroke_Style, StrokeWidth=px * 0.11,
+                     StrokeJoin=skia.Paint.kRound_Join)
+    cv.drawString(s, x, y, f, ink)
+    gold = skia.Paint(AntiAlias=True)
+    gold.setShader(skia.GradientShader.MakeLinear(
+        [skia.Point(0, y - px * 0.85), skia.Point(0, y + px * 0.05)],
+        [col("#FFF1C4"), col("#F6C766"), col("#D98A35")], [0.0, 0.5, 1.0]))
+    cv.drawString(s, x, y, f, gold)
+    return f.measureText(s)
+
+
+def tagline(cv, lines, x, y, px):
+    f = skia.Font(typeface("slab"), px)
+    sh = skia.Paint(AntiAlias=True, Color=col(P.INK, 0.8))
+    sh.setMaskFilter(skia.MaskFilter.MakeBlur(skia.kNormal_BlurStyle, px * 0.08))
+    for i, s in enumerate(lines):
+        yy = y + i * px * 1.18
+        cv.drawString(s, x + px * 0.04, yy + px * 0.06, f, sh)
+        cv.drawString(s, x, yy, f, skia.Paint(AntiAlias=True, Color=col("#F4ECDA")))
 
 
 def badge(cv, s, x, y, k):
-    f = skia.Font(typeface("slab"), 70 * k)
-    w = f.measureText(s) + 70 * k
-    cv.drawRoundRect(skia.Rect(x, y, x + w, y + 104 * k), 52 * k, 52 * k, skia.Paint(AntiAlias=True, Color=col(P.NAVY_DARK)))
-    cv.drawRoundRect(skia.Rect(x, y, x + w, y + 104 * k), 52 * k, 52 * k,
-                     skia.Paint(AntiAlias=True, Color=col(P.SAFETY), Style=skia.Paint.kStroke_Style, StrokeWidth=5 * k))
-    cv.drawString(s, x + 35 * k, y + 76 * k, f, skia.Paint(AntiAlias=True, Color=col("#F1E9D8")))
+    f = skia.Font(typeface("slab"), 58 * k)
+    w = f.measureText(s) + 60 * k
+    r = skia.Rect(x, y, x + w, y + 88 * k)
+    cv.drawRoundRect(r, 44 * k, 44 * k, skia.Paint(AntiAlias=True, Color=col(P.NAVY_DARK, 0.85)))
+    cv.drawRoundRect(r, 44 * k, 44 * k, skia.Paint(AntiAlias=True, Color=col("#F6C766"), Style=skia.Paint.kStroke_Style,
+                                                   StrokeWidth=4 * k))
+    cv.drawString(s, x + 30 * k, y + 64 * k, f, skia.Paint(AntiAlias=True, Color=col("#F4ECDA")))
+
+
+def scrim(cv, w, h, x1):
+    """Darken the text side so the lettering reads at thumbnail size."""
+    p = skia.Paint()
+    p.setShader(skia.GradientShader.MakeLinear([skia.Point(0, 0), skia.Point(x1, 0)],
+                                               [col(P.NIGHT, 0.62), col(P.NIGHT, 0.0)], None))
+    cv.drawRect(skia.Rect(0, 0, x1, h), p)
+
+
+TAG = ("Is it finally time", "for Fable 5.5?")
 
 
 def compose(img, w, h, layout):
@@ -113,13 +120,31 @@ def compose(img, w, h, layout):
     cv.drawImage(img, 0, 0)
     k = h / 2160.0
     if layout == "zh_16x9":
-        badge(cv, "4K · 60FPS", 120 * k, 110 * k, k)
-        ph = warning_panel(cv, 110 * k, 300 * k, 1480 * k, k)
-        caption(cv, [("Haiku：", 170, "#F7F1E3"), ("收到（咚咚咚）", 170, P.ORANGE_LIGHT)], 150 * k, 300 * k + ph + 260 * k, k)
+        scrim(cv, w, h, 2100 * k)
+        badge(cv, "4K · 60FPS", 140 * k, 120 * k, k)
+        spaced(cv, "NIGHT AT THE LAB", 150 * k, 470 * k, 84 * k, "#F6C766")
+        poster_text(cv, "实验室", 130 * k, 860 * k, 360 * k)
+        poster_text(cv, "奇妙夜", 130 * k, 1250 * k, 360 * k)
+        tagline(cv, TAG, 150 * k, 1490 * k, 112 * k)
     elif layout == "zh_4x3":
-        badge(cv, "4K · 60FPS", 110 * k, 100 * k, k)
-        ph = warning_panel(cv, 90 * k, 270 * k, 1480 * k, k)
-        caption(cv, [("Haiku：", 165, "#F7F1E3"), ("收到（咚咚咚）", 165, P.ORANGE_LIGHT)], 120 * k, 270 * k + ph + 250 * k, k)
+        scrim(cv, w, h, 1700 * k)
+        badge(cv, "4K · 60FPS", 110 * k, 110 * k, k)
+        spaced(cv, "NIGHT AT THE LAB", 120 * k, 440 * k, 70 * k, "#F6C766")
+        poster_text(cv, "实验室", 100 * k, 790 * k, 300 * k)
+        poster_text(cv, "奇妙夜", 100 * k, 1120 * k, 300 * k)
+        tagline(cv, TAG, 120 * k, 1340 * k, 96 * k)
+    elif layout == "en_16x9":
+        scrim(cv, w, h, 2100 * k)
+        badge(cv, "4K · 60FPS", 140 * k, 120 * k, k)
+        poster_text(cv, "NIGHT AT", 130 * k, 700 * k, 300 * k, "slab")
+        poster_text(cv, "THE LAB", 130 * k, 1010 * k, 300 * k, "slab")
+        tagline(cv, TAG, 150 * k, 1300 * k, 120 * k)
+    elif layout == "en_4x3":
+        scrim(cv, w, h, 1700 * k)
+        badge(cv, "4K · 60FPS", 110 * k, 110 * k, k)
+        poster_text(cv, "NIGHT AT", 100 * k, 640 * k, 245 * k, "slab")
+        poster_text(cv, "THE LAB", 100 * k, 900 * k, 245 * k, "slab")
+        tagline(cv, TAG, 120 * k, 1150 * k, 100 * k)
     return surf.makeImageSnapshot()
 
 
@@ -127,6 +152,8 @@ COVERS = [
     # name, size, camera, text layout
     ("cover_16x9_zh", (3840, 2160), Cam(XR - 1.95, 2.5, 5.3), "zh_16x9"),
     ("cover_4x3_zh", (2880, 2160), Cam(XR - 1.45, 2.6, 6.1), "zh_4x3"),
+    ("cover_16x9_en", (3840, 2160), Cam(XR - 1.95, 2.5, 5.3), "en_16x9"),
+    ("cover_4x3_en", (2880, 2160), Cam(XR - 1.45, 2.6, 6.1), "en_4x3"),
     ("cover_16x9_clean", (3840, 2160), Cam(XR, 2.55, 5.5), None),
     ("cover_4x3_clean", (2880, 2160), Cam(XR, 2.75, 6.5), None),
 ]
