@@ -700,7 +700,7 @@ def draw_porthole(g, rs, t):
         x = cx + c["x"] + math.sin(t * 0.4 + i) * c["drift"] * 2
         y = cy + c["y"] + math.cos(t * 0.33 + i * 1.7) * c["drift"]
         colr = mix("#B9AFCB", P.GLOW_CORE, glow * 0.6)
-        draw_curl(g, x, y, c["r"], a0, colr, 0.32 + 0.2 * glow, 0.8)
+        draw_curl(g, x, y, c["r"], a0, colr, (0.32 + 0.2 * glow) * rs.get("vapour", 1.0), 0.8)
     # haze
     g.fill_shader(glassp, g.rad_grad(cx, cy - 0.6, PORT_R, ["#8A7C95", "#8A7C95"], [0, 1], [0.0, 0.35]))
     flash = rs.get("flash", 0.0)

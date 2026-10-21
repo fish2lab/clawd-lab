@@ -1,5 +1,9 @@
 # Clawd Lab · 体型差
 
+![Clawd Lab](docs/cover.jpg)
+
+**成片下载：** [Releases](https://github.com/fish2lab/clawd-lab/releases/latest)（4K60 母版、1080p60、封面图）
+
 一支约 36 秒的 2D 程序化动画短片（16:9，4K / 60 fps）。四只 Clawd 分别代表 Claude 的四个模型，在一间奶油色加海军蓝的实验室里依次醒来。
 
 - **Opus 5.5**：白大褂、黄铜护目镜，手里拿着待办清单
@@ -25,6 +29,8 @@
 | 0:29 | 三次撞击，玻璃一次比一次裂得厉害，螺栓崩飞，叠罗汉散架 |
 | 0:32 | 黑场，那双眼睛又眨了一下。片尾标题 **FABLE 5.5** |
 
+![分镜](docs/storyboard.jpg)
+
 ## 相对原片的改动
 
 - **舷窗大小前后一致。** 整部片只有一个世界坐标系，所有镜头都只是同一个虚拟相机的平移和缩放。舷窗玻璃半径固定为 2.0 个世界单位（Opus 身宽为 1.0），远景和最后的特写用的是同一个物体，从远景推到特写也是一个连续的推镜。
@@ -43,6 +49,7 @@ pip install -r requirements.txt
 python make_video.py --res 4k --fps 60            # 4K/60 母版 → out/clawd_lab_4k.mp4
 python make_video.py --res 1080 --fps 30          # 快速预览
 python make_video.py --res 1080 --stills 7.3,29.9 # 导出单帧 PNG
+python make_covers.py                             # 16:9 / 4:3 封面（中文版与无字版）
 ```
 
 渲染按 CPU 核数切成若干段并行，每段各自编码，最后无损拼接，再混入 `clawdlab/audio.py` 生成的音轨。在 4 核机器上，4K60 全片大约需要 25 分钟。
@@ -51,6 +58,7 @@ python make_video.py --res 1080 --stills 7.3,29.9 # 导出单帧 PNG
 
 ```
 make_video.py          命令行入口：并行渲染、分段编码、拼接、混音
+make_covers.py         封面：在同一个世界里摆拍，再叠加中文标题
 clawdlab/
   story.py             分镜：所有关键时间、角色走位、相机、特效，以及音效提示表
   clawd.py             Clawd 角色：可转身的盒子投影，三套服装，道具（清单/电脑）
@@ -58,11 +66,12 @@ clawdlab/
   render.py            合成：世界层 → 灯光/暗部 → 自发光 → 暗角、纸张颗粒、闪白
   audio.py             程序化音效与配乐（脚步声由角色步态相位推导）
   gfx.py / palette.py  skia 绘图封装、配色
-assets/fonts/          Zilla Slab Bold、Caveat（SIL Open Font License）
+assets/fonts/          Zilla Slab Bold、Caveat、ZCOOL QingKe HuangYou（SIL Open Font License）
 ```
 
-## 素材与授权说明
+## 授权
 
-- 参考视频只用于确定构图、配色和节奏，没有放进仓库。
-- 字体来自 Google Fonts，使用 SIL OFL 授权，许可文本在 `assets/fonts/` 下。
-- Clawd、Claude 以及各模型名称归 Anthropic 所有。本项目是一个同人/演示性质的动画。
+- 代码：[MIT](LICENSE)
+- 字体：SIL Open Font License，许可文本在 `assets/fonts/` 下
+- 参考视频只用于确定构图、配色和节奏，没有放进仓库
+- Clawd、Claude 以及各模型名称归 Anthropic 所有。本项目是非官方同人动画，与 Anthropic 无关

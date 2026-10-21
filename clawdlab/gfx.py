@@ -54,6 +54,7 @@ def typeface(name):
     files = {
         "slab": "ZillaSlab-Bold.ttf",
         "hand": "Caveat.ttf",
+        "zh": "ZCOOLQingKeHuangYou-Regular.ttf",
     }
     if name in files:
         return skia.Typeface.MakeFromFile(os.path.join(FONT_DIR, files[name]))
